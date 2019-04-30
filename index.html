@@ -2,8 +2,11 @@
 <html>
 
 <head>
-  <meta charset='utf-8″ />
-  <meta name=' renderer' content='webkit' />
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
   <script>
     'use strict'
       ; (function (_window) {
@@ -48,11 +51,11 @@
 
     #onDevice {
       position: absolute;
-      bottom: 0;
+      top: 0;
       right: 0;
       z-index: 2;
-      padding: 12px 18px;
-      font-size: 20px;
+      padding: 10px 12px;
+      font-size: 18px;
       border: 1px solid #ddd;
       background-color: #fff;
       cursor: pointer;
@@ -80,15 +83,17 @@
   <script>
     var vConsole = new VConsole();
     // ============================================================= 用户初始
+
+    var Scene = void 0,
+      Camera = void 0,
+      Renderer = void 0,
+      FpsStats = void 0,
+      AnimateFrame = void 0,
+      Controls = void 0,
+      Devices = void 0; // 场景，照相机，渲染器，FPS监视器，渲染定时器，控制器，陀螺仪
     'use strict';
     (function (CanvasBody, _window) {
-      var Scene = void 0,
-        Camera = void 0,
-        Renderer = void 0,
-        FpsStats = void 0,
-        AnimateFrame = void 0,
-        Controls = void 0,
-        Devices = void 0; // 场景，照相机，渲染器，FPS监视器，渲染定时器，控制器，陀螺仪
+
       var onDevice = document.getElementById('onDevice');
       var isDeviceing = 0; // 陀螺仪状态
       /* 初始化函数 */
@@ -103,6 +108,7 @@
         Camera = new THREE.PerspectiveCamera(60, CanvasBody.clientWidth / CanvasBody.clientHeight, 1, 3000);
         Camera.position.set(0.1, 0, 0);
         Camera.lookAt({ x: 0, y: 0, z: 1 });
+        console.log(Camera)
       }
       // 初始化渲染器
       function initRenderer() {

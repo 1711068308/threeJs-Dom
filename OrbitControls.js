@@ -39,7 +39,7 @@ THREE.OrbitControls = function(object, domElement) {
   this.enablePan = false;// 是否可平移，默认移动速度为7px
   this.keyPanSpeed = 7.0;// 是否可平移，默认移动速度为7px
   this.autoRotate = true;// 是否自动旋转，自动旋转速度。默认每秒30圈
-  this.autoRotateSpeed = 2.0;// 是否自动旋转，自动旋转速度。默认每秒30圈
+  this.autoRotateSpeed = 0.8;// 是否自动旋转，自动旋转速度。默认每秒30圈
   this.enableKeys = true;// 是否能使用键盘
   this.keys = { LEFT: 37, UP: 38, RIGHT: 39, BOTTOM: 40 };// 默认键盘控制上下左右的键
 
@@ -322,6 +322,7 @@ THREE.OrbitControls = function(object, domElement) {
     rotateStart.set(event.touches[0].pageX, event.touches[0].pageY);
   }
   function handleTouchStartDolly(event) {
+
     const dx = event.touches[0].pageX - event.touches[1].pageX;
     const dy = event.touches[0].pageY - event.touches[1].pageY;
     const distance = Math.sqrt(dx * dx + dy * dy);
@@ -363,7 +364,9 @@ THREE.OrbitControls = function(object, domElement) {
     scope.update();
   }
   function handleTouchEnd(event) { }
+
   function onMouseDown(event) {
+    // 拖动控制
     if (scope.enabled === false) {
       return;
     }
@@ -443,7 +446,9 @@ THREE.OrbitControls = function(object, domElement) {
     }
     handleKeyDown(event);
   }
+  // ============================================ 触摸开始
   function onTouchStart(event) {
+    actClick(event);
     if (scope.enabled === false) {
       return;
     }
@@ -476,6 +481,7 @@ THREE.OrbitControls = function(object, domElement) {
       scope.dispatchEvent(startEvent);
     }
   }
+  // ============================================ 触摸移动
   function onTouchMove(event) {
     if (scope.enabled === false) {
       return;
@@ -514,17 +520,42 @@ THREE.OrbitControls = function(object, domElement) {
         state = STATE.NONE;
     }
   }
+  // ============================================ 触摸结束
   function onTouchEnd(event) {
     if (scope.enabled === false) {
       return;
     }
-    console.log(scope);
     handleTouchEnd(event);
     scope.dispatchEvent(endEvent);
     state = STATE.NONE;
   }
   function onContextMenu(event) {
     event.preventDefault();
+  }
+  // 触发点击事件
+  function actClick(event) {
+    console.log('actClick(event);');
+    // 触发鼠标点击
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    // 通过鼠标点击的位置计算出raycaster所需要的点的位置，以屏幕中心为原点，值的范围为-1到1.
+    mouse.x = (event.clientX || event.touches[0].clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY || event.touches[0].clientY / window.innerHeight) * 2 + 1;
+
+    console.log(mouse.x, mouse.y);
+    // 通过鼠标点的位置和当前相机的矩阵计算出raycaster
+    raycaster.setFromCamera(mouse, Camera);
+
+    // 获取raycaster直线和所有模型相交的数组集合
+    const intersects = raycaster.intersectObjects(Scene.children);
+    console.log(intersects);
+    // 将所有的相交的模型的颜色设置为红色，如果只需要将第一个触发事件，那就数组的第一个模型改变颜色即可
+    for (let i = 0; i < intersects.length; i++) {
+      if (intersects[i].object.callback) {
+        intersects[i].object.callback();
+      }
+      // intersects[i].object.material.color.set(0xff0000);
+    }
   }
   scope.domElement.addEventListener('contextmenu', onContextMenu, false);
   scope.domElement.addEventListener('mousedown', onMouseDown, false);

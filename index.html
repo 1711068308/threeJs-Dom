@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset='utf-8″ />
+  <meta name=' renderer' content='webkit' />
+  <script>
+    'use strict'
+      ; (function (_window) {
+        var navigatorUserAgent = navigator.userAgent
+        var iPhone = navigatorUserAgent.indexOf('iPhone')
+        if (iPhone > -1) {
+          var dpr = Number(window.devicePixelRatio),
+            one_dpr = 1 / dpr
+        } else {
+          var dpr = 1,
+            one_dpr = 1
+        }
+        var F0 = 75
+        // html[0].setAttribute('data-dpr', dpr)
+        var getFontSize = function getFontSize() {
+          var windowWidth = window.innerWidth
+          // html[0].style.fontSize = (F0 * windowWidth) / 750 + 'px'
+        }
+        getFontSize()
+        _window.addEventListener('resize', getFontSize, false)
+      })(window)
+  </script>
+  <style>
+    body {
+      position: fixed;
+      width: 100%;
+      height: 100vh;
+      margin: 0;
+    }
+
+    html,
+    body,
+    #CanvasBody {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #CanvasBody {
+      position: relative;
+    }
+
+    #onDevice {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      z-index: 2;
+      padding: 12px 18px;
+      font-size: 20px;
+      border: 1px solid #ddd;
+      background-color: #fff;
+      cursor: pointer;
+      -webkit-appearance: none;
+    }
+
+    .aaa {
+      width: 100px;
+      height: 100px;
+      background-color: red;
+    }
+  </style>
+</head>
+
+<body>
+  <div id='CanvasBody'>
+    <input id='onDevice' type='button' value='开启陀螺仪' />
+  </div>
+  <script src='https://cdn.bootcss.com/three.js/r76/three.min.js'> </script>
+  <script src='https://cdn.bootcss.com/stats.js/r16/Stats.min.js'> </script>
+  <script src="https://cdn.bootcss.com/vConsole/3.3.0/vconsole.min.js"></script>
+  <script src="./OrbitControls.js"></script>
+  <script src="./DeviceOrientation.js"></script>
+
+  <script>
+    var vConsole = new VConsole();
+    // ============================================================= 用户初始
+    'use strict';
+    (function (CanvasBody, _window) {
+      var Scene = void 0,
+        Camera = void 0,
+        Renderer = void 0,
+        FpsStats = void 0,
+        AnimateFrame = void 0,
+        Controls = void 0,
+        Devices = void 0; // 场景，照相机，渲染器，FPS监视器，渲染定时器，控制器，陀螺仪
+      var onDevice = document.getElementById('onDevice');
+      var isDeviceing = 0; // 陀螺仪状态
+      /* 初始化函数 */
+      // 初始化场景
+      function initScene() {
+        Scene = new THREE.Scene();
+      }
+      // 初始化照相机
+      function initCamera() {
+        // 四个参数分别代表了摄像机的视角、宽高比、近和远两个视截面。
+        //设置透视投影的相机,默认情况下相机的上方向为Y轴，右方向为X轴，沿着Z轴朝里（视野角：fov 纵横比：aspect 相机离视体积最近的距离：near 相机离视体积最远的距离：far）
+        Camera = new THREE.PerspectiveCamera(60, CanvasBody.clientWidth / CanvasBody.clientHeight, 1, 3000);
+        Camera.position.set(0.1, 0, 0);
+        Camera.lookAt({ x: 0, y: 0, z: 1 });
+      }
+      // 初始化渲染器
+      function initRenderer() {
+        Renderer = new THREE.WebGLRenderer();
+        Renderer.setSize(CanvasBody.clientWidth, CanvasBody.clientHeight);
+        Renderer.setClearColor(0x000000, 1);
+        CanvasBody.appendChild(Renderer.domElement);
+      }
+      // 初始化监视器
+      function initFpsStats() {
+        FpsStats = new Stats();
+        CanvasBody.appendChild(FpsStats.domElement);
+        FpsStats.domElement.style.cssText = 'position: absolute; top: 0; left: 0; ';
+      }
+      // 初始化控制器
+      function initControls() {
+        Controls = new THREE.OrbitControls(Camera);
+      }
+      // 初始化陀螺仪
+      function initDevices() {
+        Devices = new THREE.DeviceOrientationControls(Camera);
+      }
+      /* 窗口改变事件 */
+      function windowChange() {
+        initCamera();
+        Renderer.setSize(CanvasBody.clientWidth, CanvasBody.clientHeight);
+        initDevices();
+        initControls();
+      }
+      /* 控制陀螺仪 */
+      function controlDevice(event) {
+        if (isDeviceing === 0) {
+          isDeviceing = 1;
+          onDevice.value = '关闭陀螺仪';
+        } else {
+          isDeviceing = 0;
+          onDevice.value = '开启陀螺仪';
+        }
+      }
+      /* 动画 */
+      function animate(time) {
+        FpsStats.begin();
+        Renderer.clear();
+        isDeviceing === 0 ? Controls.update() : Devices.update();
+        Renderer.render(Scene, Camera);
+        FpsStats.end();
+        AnimateFrame = requestAnimationFrame(animate);
+      }
+      /* 初始化 */
+      function init() {
+        // 初始化
+        initScene(); // 初始化场景
+        initCamera(); // 初始化照相机
+        initRenderer(); // 初始化渲染器
+        initFpsStats(); // 初始化监视器
+        initControls();// 初始化控制器
+        initDevices();// 初始化陀螺仪
+        // 初始化绑定陀螺仪
+        Devices.connect();
+        _window.addEventListener('resize', windowChange, false);//监听窗口大小
+        onDevice.addEventListener('click', controlDevice, false);//按钮点击事件
+        AnimateFrame = requestAnimationFrame(animate);
+      }
+      init();
+      /* 场景内物体 */
+      (function () {
+        var r = Math.sqrt(5000 * 1827 / 4 / Math.PI);
+        console.log(r)
+        var loader = new THREE.TextureLoader();
+        var texture = THREE.ImageUtils.loadTexture('./index.jpg', {}, function () {
+          var geometry = new THREE.SphereGeometry(3, 50, 50);// 创建球面
+          var material = new THREE.MeshLambertMaterial({
+            // color: 0xffff00,
+            // wireframe: true
+            map: texture,
+            side: THREE.DoubleSide
+          });
+
+          var mesh = new THREE.Mesh(geometry, material);
+          mesh.position.set(0, 0, 0);
+          Scene.add(mesh);
+
+          // 光源
+          var al = new THREE.AmbientLight(0xffffff);
+          Scene.add(al);
+
+          var pp_Material = [], pp_Plane = [], pp_Mesh = []; 		//人物
+          pp_Plane[1] = new THREE.PlaneGeometry(1, 1, 1, 1);
+          pp_Material[1] = new THREE.MeshBasicMaterial({
+            map: new THREE.TextureLoader().load('./a.jpeg'),
+            opacity: 1,
+            transparent: true
+          });
+          pp_Mesh[1] = new THREE.Mesh(pp_Plane[1], pp_Material[1]);
+          pp_Mesh[1].position.set(2.5, 0, 0);
+          pp_Mesh[1].rotation.set(0, 30, 0);
+          pp_Mesh[1].callback = function () { alert(123) };
+          Scene.add(pp_Mesh[1]);
+
+        });
+      })();
+    })(document.getElementById('CanvasBody'), window);
+  </script>
+</body>
+
+</html>
